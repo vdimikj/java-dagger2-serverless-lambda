@@ -1,6 +1,9 @@
 package com.serverless.handler;
 
 import com.amazonaws.services.lambda.runtime.Context;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.serverless.handler.dto.ProductResponseDTO;
 import com.serverless.model.HttpRequest;
 import com.serverless.model.HttpResponse;
 import com.serverless.model.Product;
@@ -26,9 +29,14 @@ public class CreateProductHandler extends HttpBaseHandler {
         String id = "testId";
 
         LOG.info("received: {}", request);
-        productService.createProduct(new Product().withId(id));
+        String product = productService.createProduct(new Product().withId(id));
 
-        String body = "{\"data\":\"" + productService.createProduct(new Product().withId(id)) + "\"}";
+        String body = null;
+        try {
+            body = new ObjectMapper().writeValueAsString(new ProductResponseDTO(product));
+        } catch (JsonProcessingException e) {
+            LOG.error("Error during serialization of Create request {}", e.getMessage(), e);
+        }
         return response
                 .withBody(body)
                 .withStatusCode(200);
